@@ -23,7 +23,7 @@ app.post('/register', async (req, res) => {
     let { error, value } = registerSchema.validate(body);
     if(error == undefined){
         try{
-            
+
         } catch(e){
             res.sendStatus(500);
         }
@@ -31,3 +31,5 @@ app.post('/register', async (req, res) => {
         res.sendStatus(422);
     }
 });
+
+app.listen(5000);
