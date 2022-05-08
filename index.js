@@ -5,6 +5,7 @@ import dotenv from 'dotenv';
 import Joi from "joi";
 import { v4 as uuid } from 'uuid';
 import bcrypt from 'bcrypt';
+import dayjs from "dayjs";
 
 dotenv.config();
 
@@ -27,14 +28,15 @@ const loginSchema = Joi.object({
 });
 
 const taskSchema = Joi.object({
-    user: Joi.string().min(1).required(),
+    email: Joi.string().email().required(),
     token: Joi.string().min(1).required(),
+    name: Joi.string.min().required(),
     type: Joi.any().valid('entrada', 'saida').required(),
     value: Joi.number().required()
 });
 
 const getTaskSchema = Joi.object({
-    user: Joi.string().min(1).required(),
+    email: Joi.string().email().required(),
     token: Joi.string().min(1).required()
 });
 
@@ -103,15 +105,23 @@ app.post('/login', async (req, res) => {
 
 app.post('/task', async (req, res) => {
     let body = req.body;
+    let now = dayjs();
     let { error } = taskSchema.validate(body);
     if(error == undefined){
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            let user = await db.collection('users').find({user: body.user}).toArray();
+            let user = await db.collection('sessions').find({email: body.email}).toArray();
             if(user.length != 0){
                 if(user[0].token == body.token){
-                    await db.collection('tasks').insertOne(body);
+                    let taskObj ={
+                        email: body.email,
+                        name: body.name,
+                        type: body.type,
+                        value: body.value,
+                        date: now.format('DD/MM') 
+                    };
+                    await db.collection('tasks').insertOne(taskObj);
                     res.sendStatus(201);
                     mongoClient.close();
                 } else {
