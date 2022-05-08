@@ -74,9 +74,9 @@ app.post('/login', async (req, res) => {
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            let user = await db.collection('users').find({email: body.email}).toArray();
-            if(user.length != 0){
-                if(body.password == user[0].password){
+            let validation = await db.collection('users').find({email: body.email}).toArray();
+            if(validation != 0){
+                if(bcrypt.compareSync(body.password, validation[0].password)){
                     res.sendStatus(200);
                     mongoClient.close();
                 } else {
@@ -84,10 +84,11 @@ app.post('/login', async (req, res) => {
                     mongoClient.close();
                 }                
             } else {
-                res.sendStatus(404);
+                res.sendStatus(401);
                 mongoClient.close();
             }
         } catch(e){
+            console.log(e);
             res.sendStatus(500);
         }
     } else {
