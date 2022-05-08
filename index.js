@@ -50,13 +50,16 @@ app.post('/register', async (req, res) => {
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            let validation = await db.collection('users').findOne({email: body.email}).toArray();
+            let validation = await db.collection('users').find({email: body.email}).toArray();
             if(validation.length == 0){
                 await db.collection('users').insertOne(registerObj);
                 res.sendStatus(201);
                 mongoClient.close();
+            } else {
+                res.sendStatus(409);
             }
         } catch(e){
+            console.log(e);
             res.sendStatus(500);
         }
     } else {
