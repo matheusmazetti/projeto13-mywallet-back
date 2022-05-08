@@ -81,6 +81,7 @@ app.post('/login', async (req, res) => {
                 if(bcrypt.compareSync(body.password, validation[0].password)){
                     let sessionObj = {
                         email: body.email,
+                        user: validation.user,
                         token: uuid()
                     };
                     await db.collection('sessions').insertOne(sessionObj);
