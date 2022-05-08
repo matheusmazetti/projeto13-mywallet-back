@@ -147,12 +147,20 @@ app.get('/task', async (req, res) => {
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            let userTasks = await db.collection('tasks').find({user: user.body}).toArray();
-            if(userTasks.length != 0){
-                res.send(userTasks);
-                mongoClient.close();
+            let validation = await db.collection('sessions').find({email: body.email}).toArray();
+            if(validation.length != 0){
+                if(validation[0].token == body.token){
+                    let userTasks = await db.collection('tasks').find({email: body.email}).toArray();
+                    if(userTasks.length != 0){
+                        res.send(userTasks);
+                        mongoClient.close();
+                    } else {
+                        res.sendStatus(404);
+                        mongoClient.close();
+                    }
+                }
             } else {
-                res.sendStatus(404);
+                res.sendStatus(401);
                 mongoClient.close();
             }
         } catch(e) {
