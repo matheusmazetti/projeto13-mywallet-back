@@ -77,7 +77,12 @@ app.post('/login', async (req, res) => {
             let validation = await db.collection('users').find({email: body.email}).toArray();
             if(validation != 0){
                 if(bcrypt.compareSync(body.password, validation[0].password)){
-                    res.sendStatus(200);
+                    let sessionObj = {
+                        email: body.email,
+                        token: uuid()
+                    };
+                    await db.collection('sessions').insertOne(sessionObj);
+                    res.send(sessionObj);
                     mongoClient.close();
                 } else {
                     res.sendStatus(401);
