@@ -3,6 +3,8 @@ import cors from 'cors';
 import { MongoClient } from "mongodb";
 import dotenv from 'dotenv';
 import Joi from "joi";
+import { v4 as uuid } from 'uuid';
+import bcrypt from 'bcrypt';
 
 dotenv.config();
 
@@ -15,12 +17,12 @@ const mongoClient = new MongoClient(process.env.MONGO_URI);
 
 const registerSchema = Joi.object({
     user: Joi.string().min(3).required(),
-    email: Joi.string().required(),
+    email: Joi.string().email().required(),
     password: Joi.string().min(3).required()
 });
 
 const loginSchema = Joi.object({
-    user: Joi.string().min(1).required(),
+    email: Joi.string().email().required(),
     password: Joi.string().min(3).required()
 });
 
@@ -40,12 +42,20 @@ app.post('/register', async (req, res) => {
     let body = req.body;
     let { error } = registerSchema.validate(body);
     if(error == undefined){
+        let registerObj = {
+            user: body.user,
+            email: body.email,
+            password: bcrypt.hashSync(body.password, 10)
+        };
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            await db.collection('users').insertOne(body);
-            res.sendStatus(201);
-            mongoClient.close();
+            let validation = await db.collection('users').findOne({email: body.email}).toArray();
+            if(validation.length == 0){
+                await db.collection('users').insertOne(registerObj);
+                res.sendStatus(201);
+                mongoClient.close();
+            }
         } catch(e){
             res.sendStatus(500);
         }
@@ -61,7 +71,7 @@ app.post('/login', async (req, res) => {
         try{
             await mongoClient.connect();
             db = mongoClient.db('mywallet');
-            let user = await db.collection('users').find({user: body.user}).toArray();
+            let user = await db.collection('users').find({email: body.email}).toArray();
             if(user.length != 0){
                 if(body.password == user[0].password){
                     res.sendStatus(200);
