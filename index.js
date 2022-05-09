@@ -166,6 +166,9 @@ app.get('/task', async (req, res) => {
                         res.sendStatus(404);
                         mongoClient.close();
                     }
+                } else {
+                    res.sendStatus(401);
+                    mongoClient.close();
                 }
             } else {
                 res.sendStatus(401);
