@@ -30,7 +30,7 @@ const loginSchema = Joi.object({
 const taskSchema = Joi.object({
     email: Joi.string().email().required(),
     token: Joi.string().min(1).required(),
-    name: Joi.string.min().required(),
+    name: Joi.string().min(1).required(),
     type: Joi.any().valid('entrada', 'saida').required(),
     value: Joi.number().required()
 });
