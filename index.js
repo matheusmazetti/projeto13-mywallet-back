@@ -31,7 +31,7 @@ const taskSchema = Joi.object({
     email: Joi.string().email().required(),
     token: Joi.string().min(1).required(),
     name: Joi.string().min(1).required(),
-    type: Joi.any().valid('entrada', 'saida').required(),
+    type: Joi.any().valid("entrada", "saida").required(),
     value: Joi.number().required()
 });
 
@@ -81,12 +81,19 @@ app.post('/login', async (req, res) => {
                 if(bcrypt.compareSync(body.password, validation[0].password)){
                     let sessionObj = {
                         email: body.email,
-                        user: validation.user,
+                        user: validation[0].user,
                         token: uuid()
                     };
-                    await db.collection('sessions').insertOne(sessionObj);
-                    res.send(sessionObj);
-                    mongoClient.close();
+                    let active = await db.collection('sessions').find({email: sessionObj.email}).toArray();
+                    if(active.length == 0){
+                        await db.collection('sessions').insertOne(sessionObj);
+                        res.send(sessionObj);
+                        mongoClient.close();
+                    } else {
+                        await db.collection('sessions').updateOne({email: sessionObj.email}, { $set: {token: sessionObj.token}});
+                        res.send(sessionObj);
+                        mongoClient.close();
+                    }
                 } else {
                     res.sendStatus(401);
                     mongoClient.close();
