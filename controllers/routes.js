@@ -9,5 +9,5 @@ const router = express.Router();
 router.post('/register', register);
 router.post('/login', login);
 router.post('/task', postTask);
-router.get('/task', getTask);
+router.post('/alltasks', getTask);
 export default router;
